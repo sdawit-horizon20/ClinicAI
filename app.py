@@ -1,78 +1,42 @@
 import gradio as gr
 
------------------------------
+def respond(user_message, history):
+    if history is None:
+        history = []
 
-ClinicAI Chat Logic
+    if not user_message:
+        return history
 
------------------------------
+    history.append({
+        "role": "user",
+        "content": user_message
+    })
 
-def respond(user_message, history): """ Chatbot expects a list of dicts: {"role": "user"|"assistant", "content": str} """ # Always ensure history is a list if history is None: history = []
+    history.append({
+        "role": "assistant",
+        "content": (
+            "I am ClinicAI 🤍. I provide general health information only. "
+            "This is not medical advice. Please consult a healthcare professional."
+        )
+    })
 
-# Ignore empty submits
-if not user_message:
     return history
 
-# Append user message
-history.append({
-    "role": "user",
-    "content": str(user_message)
-})
 
-# Safe placeholder response
-assistant_reply = (
-    "I am ClinicAI 🤍. I provide general health information only. "
-    "I am not a doctor, and this is not a medical diagnosis. "
-    "Please consult a licensed healthcare professional.\n\n"
-    "How can I help you today?"
-)
+with gr.Blocks() as demo:
+    gr.Markdown(
+        "# 🏥 ClinicAI\n"
+        "_Educational use only. Not a medical diagnosis._"
+    )
 
-# Append assistant message
-history.append({
-    "role": "assistant",
-    "content": assistant_reply
-})
+    chatbot = gr.Chatbot(type="messages", height=500)
+    msg = gr.Textbox(placeholder="Ask a health question…")
+    send = gr.Button("Send")
+    clear = gr.Button("Clear")
 
-return history
+    send.click(respond, inputs=[msg, chatbot], outputs=[chatbot])
+    clear.click(lambda: [], outputs=[chatbot])
 
------------------------------
 
-Gradio UI
-
------------------------------
-
-with gr.Blocks(title="ClinicAI – Healthcare Assistant") as demo: gr.Markdown( """ # 🏥 ClinicAI AI-powered healthcare assistant
-Educational use only. Not a medical diagnosis.
-""" )
-
-chatbot = gr.Chatbot(
-    type="messages",
-    height=500
-)
-
-msg = gr.Textbox(
-    placeholder="Ask a health-related question...",
-    label="Your message",
-    lines=2
-)
-
-send = gr.Button("Send")
-clear = gr.Button("Clear Chat")
-
-send.click(
-    respond,
-    inputs=[msg, chatbot],
-    outputs=[chatbot]
-)
-
-clear.click(
-    lambda: [],
-    outputs=[chatbot]
-)
-
------------------------------
-
-App Launch (Render-safe)
-
------------------------------
-
-if name == "main": demo.launch(server_name="0.0.0.0", server_port=10000)
+if __name__ == "__main__":
+    demo.launch(server_name="0.0.0.0", server_port=10000)
