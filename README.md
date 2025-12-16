@@ -1,20 +1,12 @@
-# ClinicAI
+# ClinicAI 🏥
 
-**ClinicAI** – AI-powered healthcare assistant with intelligent chat, voice support, symptom checking, Amharic language capabilities, and safe medical guidance.
+A Healthcare AI Chatbot built with Gradio and OpenAI API.
 
-## Features
+## Setup
 
-- 💬 **Text Chat** – Ask health questions safely and get empathetic AI responses.
-- 🎙️ **Voice Chat** – Speak naturally and receive spoken AI replies.
-- 🩺 **Symptom Checker** – Intelligent symptom assessment with risk levels (Low, Medium, Urgent).
-- 🇪🇹 **Amharic Support** – Chat and voice in Amharic and English.
-- 💎 **Free vs Premium Plans** – Daily limits for free users, unlimited for premium.
-- ⚠️ **Healthcare-Safe** – No diagnoses, no prescriptions, emergency alerts included.
-- 📊 **JSON Database** – Stores user sessions, messages, and analytics.
-
-## Installation
-
-```bash
-git clone https://github.com/YOUR_USERNAME/ClinicAI.git
-cd ClinicAI
-pip install -r requirements.txt
+1. Clone this repo.
+2. Set your OpenAI API key:
+   - Linux/Mac: `export OPENAI_API_KEY="your_api_key_here"`
+   - Windows CMD: `setx OPENAI_API_KEY "your_api_key_here"`
+   - Windows PowerShell: `$env:OPENAI_API_KEY="your_api_key_here"`
+3. Install dependencies:
