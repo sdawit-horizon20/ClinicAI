@@ -6,23 +6,27 @@ ClinicAI Chat Logic
 
 -----------------------------
 
-def respond(user_message, history): """ Gradio Chatbot with type='messages' expects: history = [ {"role": "user", "content": "..."}, {"role": "assistant", "content": "..."} ] """ if history is None: history = []
+def respond(user_message, history): """ Chatbot expects a list of dicts: {"role": "user"|"assistant", "content": str} """ # Always ensure history is a list if history is None: history = []
 
-# Add user message
+# Ignore empty submits
+if not user_message:
+    return history
+
+# Append user message
 history.append({
     "role": "user",
-    "content": user_message
+    "content": str(user_message)
 })
 
-# 🔒 Placeholder medical-safe response (NO diagnosis)
+# Safe placeholder response
 assistant_reply = (
-    "I am ClinicAI 🤍. I can provide general health information, "
-    "but I am not a doctor. Please consult a licensed healthcare "
-    "professional for diagnosis or treatment.\n\n"
-    "How can I assist you today?"
+    "I am ClinicAI 🤍. I provide general health information only. "
+    "I am not a doctor, and this is not a medical diagnosis. "
+    "Please consult a licensed healthcare professional.\n\n"
+    "How can I help you today?"
 )
 
-# Add assistant message
+# Append assistant message
 history.append({
     "role": "assistant",
     "content": assistant_reply
@@ -36,8 +40,8 @@ Gradio UI
 
 -----------------------------
 
-with gr.Blocks(title="ClinicAI – Healthcare Assistant") as demo: gr.Markdown( """ # 🏥 ClinicAI Your AI-powered healthcare assistant
-For educational purposes only. Not a medical diagnosis.
+with gr.Blocks(title="ClinicAI – Healthcare Assistant") as demo: gr.Markdown( """ # 🏥 ClinicAI AI-powered healthcare assistant
+Educational use only. Not a medical diagnosis.
 """ )
 
 chatbot = gr.Chatbot(
@@ -47,7 +51,8 @@ chatbot = gr.Chatbot(
 
 msg = gr.Textbox(
     placeholder="Ask a health-related question...",
-    label="Your message"
+    label="Your message",
+    lines=2
 )
 
 send = gr.Button("Send")
@@ -66,7 +71,7 @@ clear.click(
 
 -----------------------------
 
-App Launch
+App Launch (Render-safe)
 
 -----------------------------
 
