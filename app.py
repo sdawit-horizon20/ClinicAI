@@ -1,79 +1,73 @@
 import gradio as gr
-import os
-from openai import OpenAI, RateLimitError
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+-----------------------------
 
-# --------------------------------
-# AI response handler
-# --------------------------------
-def clinicai_response(user_input, history):
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are ClinicAI, a healthcare assistant. Do not give diagnoses."},
-                {"role": "user", "content": user_input}
-            ],
-            max_tokens=300
-        )
-        return response.choices[0].message.content
+ClinicAI Chat Logic
 
-    except RateLimitError:
-        return (
-            "⚠️ ClinicAI Notice:\n\n"
-            "AI service quota has been exceeded.\n"
-            "Please try again later or contact the administrator."
-        )
+-----------------------------
 
-    except Exception as e:
-        return f"⚠️ ClinicAI Error: {str(e)}"
+def respond(user_message, history): """ Gradio Chatbot with type='messages' expects: history = [ {"role": "user", "content": "..."}, {"role": "assistant", "content": "..."} ] """ if history is None: history = []
 
+# Add user message
+history.append({
+    "role": "user",
+    "content": user_message
+})
 
-# --------------------------------
-# Chat handler
-# --------------------------------
-def chat_handler(user_input, history):
-    if history is None:
-        history = []
+# 🔒 Placeholder medical-safe response (NO diagnosis)
+assistant_reply = (
+    "I am ClinicAI 🤍. I can provide general health information, "
+    "but I am not a doctor. Please consult a licensed healthcare "
+    "professional for diagnosis or treatment.\n\n"
+    "How can I assist you today?"
+)
 
-    ai_reply = clinicai_response(user_input, history)
-    history.append((user_input, ai_reply))
-    return history, ""
+# Add assistant message
+history.append({
+    "role": "assistant",
+    "content": assistant_reply
+})
 
+return history
 
-# --------------------------------
-# UI
-# --------------------------------
-with gr.Blocks(title="ClinicAI 🏥🤖") as demo:
-    gr.Markdown(
-        """
-        # 🏥 ClinicAI  
-        **AI-powered Healthcare Assistant**  
-        _Educational use only. Not a medical diagnosis._
-        """
-    )
+-----------------------------
 
-    chatbot = gr.Chatbot(height=500)
+Gradio UI
 
-    with gr.Row():
-        txt = gr.Textbox(
-            placeholder="Type your health question...",
-            show_label=False,
-            scale=4
-        )
-        send = gr.Button("Send")
+-----------------------------
 
-    send.click(chat_handler, inputs=[txt, chatbot], outputs=[chatbot, txt])
-    txt.submit(chat_handler, inputs=[txt, chatbot], outputs=[chatbot, txt])
+with gr.Blocks(title="ClinicAI – Healthcare Assistant") as demo: gr.Markdown( """ # 🏥 ClinicAI Your AI-powered healthcare assistant
+For educational purposes only. Not a medical diagnosis.
+""" )
 
-    gr.Markdown("⚠️ ClinicAI does not replace a licensed medical professional.")
+chatbot = gr.Chatbot(
+    type="messages",
+    height=500
+)
 
+msg = gr.Textbox(
+    placeholder="Ask a health-related question...",
+    label="Your message"
+)
 
-# --------------------------------
-# Render port binding
-# --------------------------------
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    demo.launch(server_name="0.0.0.0", server_port=port)
+send = gr.Button("Send")
+clear = gr.Button("Clear Chat")
+
+send.click(
+    respond,
+    inputs=[msg, chatbot],
+    outputs=[chatbot]
+)
+
+clear.click(
+    lambda: [],
+    outputs=[chatbot]
+)
+
+-----------------------------
+
+App Launch
+
+-----------------------------
+
+if name == "main": demo.launch(server_name="0.0.0.0", server_port=10000)
