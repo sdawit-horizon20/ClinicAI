@@ -238,7 +238,8 @@ with gr.Blocks(title="ClinicAI") as demo:
     gr.Markdown("AI-powered healthcare assistant for safe medical guidance.")
     gr.Markdown(MEDICAL_DISCLAIMER)
 
-    chatbot = gr.Chatbot(type="messages", height=500)
+    # FIX: Removed 'type="messages"' for new Gradio versions
+    chatbot = gr.Chatbot(height=500)
     state = gr.State([])
 
     with gr.Tab("💬 Text Chat"):
@@ -254,4 +255,6 @@ with gr.Blocks(title="ClinicAI") as demo:
                            outputs=[chatbot,state,audio_output])
 
 if __name__=="__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    # FIX: Dynamic port for Render
+    port = int(os.environ.get("PORT", 7860))
+    demo.launch(server_name="0.0.0.0", server_port=port)
