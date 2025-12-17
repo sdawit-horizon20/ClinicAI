@@ -4,19 +4,11 @@ import gradio as gr
 def respond(user_message, history):
     history = history or []
 
-    # User message
-    history.append({
-        "role": "user",
-        "content": user_message
-    })
+    # AI reply (placeholder for now)
+    ai_reply = "Hello 👋 I am ClinicAI, your healthcare assistant 🏥"
 
-    # AI reply (replace later with real AI model)
-    ai_reply = "Hello 👋 I am **ClinicAI**, your healthcare assistant 🏥"
-
-    history.append({
-        "role": "assistant",
-        "content": ai_reply
-    })
+    # Append as TUPLE (required by this Gradio version)
+    history.append((user_message, ai_reply))
 
     return history, history, ""
 
@@ -31,7 +23,6 @@ with gr.Blocks(title="ClinicAI 🏥") as demo:
     )
 
     chatbot = gr.Chatbot(
-        type="messages",
         height=500
     )
 
@@ -43,14 +34,14 @@ with gr.Blocks(title="ClinicAI 🏥") as demo:
         )
         send_btn = gr.Button("Send ☕️", scale=1)
 
-    # Submit by ENTER
+    # ENTER key
     msg.submit(
         respond,
         inputs=[msg, chatbot],
         outputs=[chatbot, chatbot, msg]
     )
 
-    # Submit by SEND button
+    # SEND button
     send_btn.click(
         respond,
         inputs=[msg, chatbot],
