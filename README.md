@@ -1,12 +1,10 @@
-# ClinicAI 🏥
+# ClinicAI
 
-A Healthcare AI Chatbot built with Gradio and OpenAI API.
+AI Healthcare Assistant built with Gradio + OpenAI GPT.
 
-## Setup
+## Deployment
 
-1. Clone this repo.
-2. Set your OpenAI API key:
-   - Linux/Mac: `export OPENAI_API_KEY="your_api_key_here"`
-   - Windows CMD: `setx OPENAI_API_KEY "your_api_key_here"`
-   - Windows PowerShell: `$env:OPENAI_API_KEY="your_api_key_here"`
-3. Install dependencies:
+1. Set **Python 3.10** runtime on Render.
+2. Add secret `OPENAI_API_KEY`.
+3. Deploy using `app.py` and `requirements.txt`.
+4. Access your live AI assistant!
