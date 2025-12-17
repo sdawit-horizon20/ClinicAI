@@ -1,11 +1,12 @@
 import gradio as gr
 
-def respond(message):
+def respond(message, *args):
     return (
-        "I’m sorry you’re feeling unwell 🤍\n\n"
-        "Fever and cough are common symptoms.\n\n"
-        "Please rest, drink fluids, and monitor your temperature.\n"
-        "If symptoms worsen or last several days, seek medical care 🏥"
+        "Hello 👨‍⚕️🤍\n\n"
+        "I am ClinicAI, your healthcare assistant.\n\n"
+        "I can help you understand symptoms, give general health guidance, "
+        "and tell you when to seek medical care.\n\n"
+        "How can I help you today?"
     )
 
 demo = gr.ChatInterface(
