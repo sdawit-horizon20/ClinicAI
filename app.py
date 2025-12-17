@@ -1,51 +1,29 @@
 import gradio as gr
 
-# --------- AI RESPONSE FUNCTION ----------
-def respond(user_message, history):
+def respond(message, history):
     history = history or []
 
-    # AI reply (placeholder for now)
-    ai_reply = "Hello 👋 I am ClinicAI, your healthcare assistant 🏥"
+    bot_reply = "Hello 👋 I am ClinicAI 🏥"
 
-    # Append as TUPLE (required by this Gradio version)
-    history.append((user_message, ai_reply))
+    # MUST be tuple
+    history.append((message, bot_reply))
 
     return history, history, ""
 
+with gr.Blocks() as demo:
+    gr.Markdown("# 🏥 ClinicAI")
 
-# --------- UI ----------
-with gr.Blocks(title="ClinicAI 🏥") as demo:
-    gr.Markdown(
-        """
-        # 🏥 ClinicAI
-        *Your AI Healthcare Assistant*
-        """
-    )
-
-    chatbot = gr.Chatbot(
-        height=500
-    )
+    chatbot = gr.Chatbot(height=500)  # ❌ NO type parameter
 
     with gr.Row():
         msg = gr.Textbox(
-            placeholder="Type your message here...",
+            placeholder="Type your message…",
             show_label=False,
             scale=4
         )
-        send_btn = gr.Button("Send ☕️", scale=1)
+        send = gr.Button("Send ☕️", scale=1)
 
-    # ENTER key
-    msg.submit(
-        respond,
-        inputs=[msg, chatbot],
-        outputs=[chatbot, chatbot, msg]
-    )
-
-    # SEND button
-    send_btn.click(
-        respond,
-        inputs=[msg, chatbot],
-        outputs=[chatbot, chatbot, msg]
-    )
+    msg.submit(respond, [msg, chatbot], [chatbot, chatbot, msg])
+    send.click(respond, [msg, chatbot], [chatbot, chatbot, msg])
 
 demo.launch(server_name="0.0.0.0", server_port=10000)
