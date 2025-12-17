@@ -1,67 +1,51 @@
-import gradio as gr
-import openai
 import os
-import json
+import gradio as gr
+from openai import OpenAI
 
-# Set your OpenAI API key in environment variables
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Initialize OpenAI client (API key comes from Render environment)
+client = OpenAI()
 
-# Database file for storing chat history (optional)
-DB_FILE = "database/chat_history.json"
-
-# Ensure database folder exists
-os.makedirs("database", exist_ok=True)
-
-# Load previous chat history if exists
-if os.path.exists(DB_FILE):
-    with open(DB_FILE, "r") as f:
-        chat_history_db = json.load(f)
-else:
-    chat_history_db = []
-
-# AI response function using OpenAI GPT
 def ai_response(user_message, chat_history):
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are ClinicAI, a helpful healthcare assistant. "
-                "Provide accurate, safe, and empathetic medical advice. "
-                "Do not give diagnoses. Encourage seeing a doctor when needed."
-            )
-        }
-    ]
+    try:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are ClinicAI, a helpful healthcare assistant. "
+                    "Provide safe, empathetic medical information. "
+                    "Do not diagnose. Encourage consulting professionals when needed."
+                )
+            }
+        ]
 
-    messages.extend(chat_history)
-    messages.append({"role": "user", "content": user_message})
+        messages.extend(chat_history)
+        messages.append({"role": "user", "content": user_message})
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-        temperature=0.7,
-        max_tokens=300
-    )
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.7,
+            max_tokens=300
+        )
 
-    return response.choices[0].message.content
-# Function to handle chat updates
+        return response.choices[0].message.content
+
+    except Exception as e:
+        # This will show the REAL error in the chatbot
+        return f"⚠️ ClinicAI error: {str(e)}"
+
 def respond(message, chat_history):
     chat_history.append({"role": "user", "content": message})
-    response = ai_response(message, chat_history)
-    chat_history.append({"role": "assistant", "content": response})
-    
-    # Save to database
-    chat_history_db.append({"user": message, "assistant": response})
-    with open(DB_FILE, "w") as f:
-        json.dump(chat_history_db, f, indent=4)
-    
+    reply = ai_response(message, chat_history)
+    chat_history.append({"role": "assistant", "content": reply})
     return chat_history, chat_history
 
-# Gradio interface
 with gr.Blocks() as demo:
-    gr.Markdown("## ClinicAI 🏥 — Your AI Healthcare Assistant")
-    
-    chatbot = gr.Chatbot(label="ClinicAI Chat")
-    msg = gr.Textbox(label="Type your symptoms or questions here...")
+    gr.Markdown("## 🏥 ClinicAI — Healthcare Assistant")
+
+    chatbot = gr.Chatbot(type="messages", height=500)
+    msg = gr.Textbox(placeholder="Describe your symptoms or ask a health question...")
+
     msg.submit(respond, [msg, chatbot], [chatbot, chatbot])
 
 demo.launch(
