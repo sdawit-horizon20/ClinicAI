@@ -55,4 +55,8 @@ with gr.Blocks() as demo:
     msg = gr.Textbox(label="Type your symptoms or questions here...")
     msg.submit(respond, [msg, chatbot], [chatbot, chatbot])
 
-demo.launch()
+demo.launch(
+    server_name="0.0.0.0",
+    server_port=int(os.environ.get("PORT", 7860)),
+    share=False
+)
