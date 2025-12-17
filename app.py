@@ -1,56 +1,58 @@
 import os
 import gradio as gr
 from openai import OpenAI
-client = OpenAI(timeout=20)
 
-# Initialize OpenAI client (API key comes from Render environment)
-client = OpenAI()
-
-def ai_response(user_message, chat_history):
-    try:
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are ClinicAI, a helpful healthcare assistant. "
-                    "Provide safe, empathetic medical information. "
-                    "Do not diagnose. Encourage consulting professionals when needed."
-                )
-            }
-        ]
-
-        messages.extend(chat_history)
-        messages.append({"role": "user", "content": user_message})
-
-        response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=messages,
-    temperature=0.7,
-    max_tokens=300
+# -----------------------------
+# OpenAI Client
+# -----------------------------
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    timeout=30
 )
 
-        return response.choices[0].message.content
+# -----------------------------
+# AI Response Function
+# -----------------------------
+def clinicai_response(message, history):
+    try:
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=message
+        )
+        return response.output_text
 
     except Exception as e:
-        # This will show the REAL error in the chatbot
         return f"⚠️ ClinicAI error: {str(e)}"
 
-def respond(message, chat_history):
-    chat_history.append({"role": "user", "content": message})
-    reply = ai_response(message, chat_history)
-    chat_history.append({"role": "assistant", "content": reply})
-    return chat_history, chat_history
 
-with gr.Blocks() as demo:
-    gr.Markdown("## 🏥 ClinicAI — Healthcare Assistant")
+# -----------------------------
+# Gradio UI
+# -----------------------------
+with gr.Blocks(title="ClinicAI") as demo:
+    gr.Markdown("## 🏥 ClinicAI – Healthcare Assistant")
+    gr.Markdown("Ask health-related questions. This is not a replacement for a doctor.")
 
-    chatbot = gr.Chatbot(height=500)
-    msg = gr.Textbox(placeholder="Describe your symptoms or ask a health question...")
+    chatbot = gr.Chatbot(height=450)
+    msg = gr.Textbox(
+        placeholder="Type your health question here...",
+        label="Your Message"
+    )
+    clear = gr.Button("Clear Chat")
 
-    msg.submit(respond, [msg, chatbot], [chatbot, chatbot])
+    def respond(user_message, chat_history):
+        bot_message = clinicai_response(user_message, chat_history)
+        chat_history.append((user_message, bot_message))
+        return "", chat_history
 
-demo.launch(
-    server_name="0.0.0.0",
-    server_port=int(os.environ.get("PORT", 7860)),
-    share=False
-)
+    msg.submit(respond, [msg, chatbot], [msg, chatbot])
+    clear.click(lambda: [], None, chatbot)
+
+# -----------------------------
+# Run App (Render compatible)
+# -----------------------------
+if __name__ == "__main__":
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 10000)),
+        show_error=True
+    )
