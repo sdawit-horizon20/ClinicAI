@@ -1,6 +1,7 @@
 import os
 import gradio as gr
 from openai import OpenAI
+client = OpenAI(timeout=20)
 
 # Initialize OpenAI client (API key comes from Render environment)
 client = OpenAI()
