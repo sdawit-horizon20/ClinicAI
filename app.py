@@ -3,27 +3,22 @@ import gradio as gr
 def respond(message, history):
     history = history or []
 
-    bot_reply = "Hello 👋 I am ClinicAI 🏥"
+    history.append({
+        "role": "user",
+        "content": message
+    })
 
-    # MUST be tuple
-    history.append((message, bot_reply))
+    history.append({
+        "role": "assistant",
+        "content": "Hello 👋 I am ClinicAI, your healthcare assistant 🏥"
+    })
 
-    return history, history, ""
+    return history
 
-with gr.Blocks() as demo:
-    gr.Markdown("# 🏥 ClinicAI")
-
-    chatbot = gr.Chatbot(height=500)  # ❌ NO type parameter
-
-    with gr.Row():
-        msg = gr.Textbox(
-            placeholder="Type your message…",
-            show_label=False,
-            scale=4
-        )
-        send = gr.Button("Send ☕️", scale=1)
-
-    msg.submit(respond, [msg, chatbot], [chatbot, chatbot, msg])
-    send.click(respond, [msg, chatbot], [chatbot, chatbot, msg])
+demo = gr.ChatInterface(
+    fn=respond,
+    title="🏥 ClinicAI",
+    description="Your AI Healthcare Assistant",
+)
 
 demo.launch(server_name="0.0.0.0", server_port=10000)
