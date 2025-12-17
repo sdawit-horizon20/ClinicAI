@@ -21,19 +21,28 @@ else:
 
 # AI response function using OpenAI GPT
 def ai_response(user_message, chat_history):
-    messages = [{"role": "system", "content": "You are ClinicAI, a helpful healthcare assistant. Provide accurate, safe, and empathetic medical advice."}]
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are ClinicAI, a helpful healthcare assistant. "
+                "Provide accurate, safe, and empathetic medical advice. "
+                "Do not give diagnoses. Encourage seeing a doctor when needed."
+            )
+        }
+    ]
+
     messages.extend(chat_history)
     messages.append({"role": "user", "content": user_message})
-    
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",  # Change to gpt-4 if available
-        messages=messages,
-        max_tokens=300,
-        temperature=0.7
-    )
-    
-    return response.choices[0].message['content']
 
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages,
+        temperature=0.7,
+        max_tokens=300
+    )
+
+    return response.choices[0].message.content
 # Function to handle chat updates
 def respond(message, chat_history):
     chat_history.append({"role": "user", "content": message})
