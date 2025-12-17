@@ -1,58 +1,60 @@
-import os
 import gradio as gr
-from openai import OpenAI
 
-# -----------------------------
-# OpenAI Client
-# -----------------------------
-client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    timeout=30
-)
+# --------- AI RESPONSE FUNCTION ----------
+def respond(user_message, history):
+    history = history or []
 
-# -----------------------------
-# AI Response Function
-# -----------------------------
-def clinicai_response(message, history):
-    try:
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=message
+    # User message
+    history.append({
+        "role": "user",
+        "content": user_message
+    })
+
+    # AI reply (replace later with real AI model)
+    ai_reply = "Hello 👋 I am **ClinicAI**, your healthcare assistant 🏥"
+
+    history.append({
+        "role": "assistant",
+        "content": ai_reply
+    })
+
+    return history, history, ""
+
+
+# --------- UI ----------
+with gr.Blocks(title="ClinicAI 🏥") as demo:
+    gr.Markdown(
+        """
+        # 🏥 ClinicAI
+        *Your AI Healthcare Assistant*
+        """
+    )
+
+    chatbot = gr.Chatbot(
+        type="messages",
+        height=500
+    )
+
+    with gr.Row():
+        msg = gr.Textbox(
+            placeholder="Type your message here...",
+            show_label=False,
+            scale=4
         )
-        return response.output_text
+        send_btn = gr.Button("Send ☕️", scale=1)
 
-    except Exception as e:
-        return f"⚠️ ClinicAI error: {str(e)}"
-
-
-# -----------------------------
-# Gradio UI
-# -----------------------------
-with gr.Blocks(title="ClinicAI") as demo:
-    gr.Markdown("## 🏥 ClinicAI – Healthcare Assistant")
-    gr.Markdown("Ask health-related questions. This is not a replacement for a doctor.")
-
-    chatbot = gr.Chatbot(height=450)
-    msg = gr.Textbox(
-        placeholder="Type your health question here...",
-        label="Your Message"
+    # Submit by ENTER
+    msg.submit(
+        respond,
+        inputs=[msg, chatbot],
+        outputs=[chatbot, chatbot, msg]
     )
-    clear = gr.Button("Clear Chat")
 
-    def respond(user_message, chat_history):
-        bot_message = clinicai_response(user_message, chat_history)
-        chat_history.append((user_message, bot_message))
-        return "", chat_history
-
-    msg.submit(respond, [msg, chatbot], [msg, chatbot])
-    clear.click(lambda: [], None, chatbot)
-
-# -----------------------------
-# Run App (Render compatible)
-# -----------------------------
-if __name__ == "__main__":
-    demo.launch(
-        server_name="0.0.0.0",
-        server_port=int(os.environ.get("PORT", 10000)),
-        show_error=True
+    # Submit by SEND button
+    send_btn.click(
+        respond,
+        inputs=[msg, chatbot],
+        outputs=[chatbot, chatbot, msg]
     )
+
+demo.launch(server_name="0.0.0.0", server_port=10000)
