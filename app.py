@@ -1,96 +1,7 @@
-import os
-import json
-import openai
 import gradio as gr
-from googletrans import Translator
+from utils.ai import respond
 
-# -----------------------------
-# 1️⃣ OpenAI API Key
-# -----------------------------
-openai.api_key = os.getenv("OPENAI_API_KEY")
-
-# -----------------------------
-# 2️⃣ Translator setup
-# -----------------------------
-translator = Translator()
-
-def translate_to_english(text):
-    try:
-        return translator.translate(text, dest='en').text
-    except:
-        return text
-
-def translate_from_english(text, target_lang='en'):
-    if target_lang == 'en':
-        return text
-    try:
-        return translator.translate(text, dest=target_lang).text
-    except:
-        return text
-
-# -----------------------------
-# 3️⃣ Load / Save DB functions
-# -----------------------------
-DB_FILE = "db/chat_history.json"
-
-def load_history():
-    try:
-        with open(DB_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
-
-def save_history(history):
-    os.makedirs("db", exist_ok=True)
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump(history, f, ensure_ascii=False, indent=2)
-
-# -----------------------------
-# 4️⃣ AI Response Function
-# -----------------------------
-def respond(user_message, history=None, user_lang='en'):
-    # Load existing history from DB
-    full_history = load_history()
-
-    # Use provided session history if exists
-    history = history or []
-
-    # Translate user input to English
-    user_message_en = translate_to_english(user_message) if user_lang != 'en' else user_message
-
-    # Prepare OpenAI messages
-    messages = [{"role": "system", "content": "You are ClinicAI, a helpful healthcare assistant. Give safe, general health advice and encourage users to see a doctor if needed."}]
-    for entry in full_history:
-        messages.append({"role": "user", "content": translate_to_english(entry[0])})
-        messages.append({"role": "assistant", "content": entry[1]})
-    messages.append({"role": "user", "content": user_message_en})
-
-    # Call OpenAI API
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-            temperature=0.7,
-            max_tokens=400
-        )
-        ai_reply = response.choices[0].message.content.strip()
-    except:
-        ai_reply = "⚠️ Sorry, I couldn't process your request."
-
-    ai_reply_translated = translate_from_english(ai_reply, target_lang=user_lang)
-
-    # Update history
-    history.append((user_message, ai_reply_translated))
-    full_history.append((user_message, ai_reply_translated))
-
-    # Save to JSON DB
-    save_history(full_history)
-
-    return history, history, ""  # clear input box
-
-# -----------------------------
-# 5️⃣ Symptom buttons
-# -----------------------------
+# Quick symptom buttons
 symptoms = ["Fever 🤒", "Cough 🤧", "Headache 🤕", "Stomach Pain 🤢", "Fatigue 🥱"]
 
 def add_symptom(symptom, chatbot):
@@ -98,7 +9,7 @@ def add_symptom(symptom, chatbot):
     return respond(symptom_text, chatbot)
 
 # -----------------------------
-# 6️⃣ Gradio UI
+# Gradio UI
 # -----------------------------
 with gr.Blocks(title="🏥 ClinicAI") as demo:
     gr.Markdown("# 🏥 ClinicAI\nYour AI Healthcare Assistant (Multi-lingual)")
@@ -118,7 +29,4 @@ with gr.Blocks(title="🏥 ClinicAI") as demo:
     # Send button
     send_btn.click(respond, [msg, chatbot], [chatbot, chatbot, msg])
 
-# -----------------------------
-# 7️⃣ Launch
-# -----------------------------
 demo.launch(server_name="0.0.0.0", server_port=10000)
