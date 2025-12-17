@@ -43,7 +43,7 @@ def respond(message, chat_history):
 with gr.Blocks() as demo:
     gr.Markdown("## 🏥 ClinicAI — Healthcare Assistant")
 
-    chatbot = gr.Chatbot(type="messages", height=500)
+    chatbot = gr.Chatbot(height=500)
     msg = gr.Textbox(placeholder="Describe your symptoms or ask a health question...")
 
     msg.submit(respond, [msg, chatbot], [chatbot, chatbot])
