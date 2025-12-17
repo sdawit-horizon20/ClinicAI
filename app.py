@@ -1,43 +1,74 @@
+import os
+import openai
 import gradio as gr
 
-def respond(message, *args):
-    msg = message.lower()
+# -----------------------------
+# 1️⃣ Set your OpenAI API key
+# -----------------------------
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Set this in Render secrets
 
-    # Greeting
-    if any(word in msg for word in ["hello", "hi", "greetings", "doctor"]):
-        return (
-            "Hello 👨‍⚕️🤍\n\n"
-            "I am ClinicAI, your healthcare assistant.\n\n"
-            "How can I help you today?"
+# -----------------------------
+# 2️⃣ AI response function
+# -----------------------------
+def respond(user_message, history=None):
+    history = history or []
+
+    # Build messages for OpenAI
+    messages = [{"role": "system", "content": "You are ClinicAI, a helpful healthcare assistant. Give safe, general health advice and always encourage users to see a doctor if needed."}]
+    
+    # Add previous conversation for context
+    for entry in history:
+        messages.append({"role": "user", "content": entry[0]})
+        messages.append({"role": "assistant", "content": entry[1]})
+
+    # Add current user input
+    messages.append({"role": "user", "content": user_message})
+
+    # Call OpenAI API
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",  # Change to gpt-4 if available
+            messages=messages,
+            temperature=0.7,
+            max_tokens=400
         )
+        ai_reply = response.choices[0].message.content.strip()
+    except Exception as e:
+        ai_reply = "⚠️ Sorry, I couldn't process your request. Please try again later."
 
-    # Fever + cough
-    if "fever" in msg and "cough" in msg:
-        return (
-            "I’m sorry you’re feeling unwell 🤍\n\n"
-            "Fever and cough together are commonly caused by infections such as flu, COVID-19, or other respiratory infections.\n\n"
-            "💡 What you can do now:\n"
-            "- Rest and drink plenty of fluids\n"
-            "- Monitor your temperature\n"
-            "- Use paracetamol if advised by a healthcare professional\n\n"
-            "⚠️ Please seek medical care urgently if you have:\n"
-            "- Difficulty breathing\n"
-            "- Chest pain\n"
-            "- Fever lasting more than 3 days\n\n"
-            "Would you like me to ask a few questions to better understand your symptoms?"
-        )
+    # Append to history
+    history.append((user_message, ai_reply))
 
-    # Default response
-    return (
-        "Thank you for sharing 🤍\n\n"
-        "Could you please tell me more about your symptoms?\n"
-        "For example: fever, pain, cough, headache, or stomach problems."
+    return history, history, ""  # Third value clears the input box
+
+# -----------------------------
+# 3️⃣ Gradio UI
+# -----------------------------
+with gr.Blocks(title="🏥 ClinicAI") as demo:
+    gr.Markdown(
+        """
+        # 🏥 ClinicAI
+        Your AI Healthcare Assistant
+        """
     )
 
-demo = gr.ChatInterface(
-    fn=respond,
-    title="🏥 ClinicAI",
-    description="Your AI Healthcare Assistant"
-)
+    chatbot = gr.Chatbot(height=500)  # Tuple-based history
 
+    with gr.Row():
+        msg = gr.Textbox(
+            placeholder="Type your message here...",
+            show_label=False,
+            scale=4
+        )
+        send_btn = gr.Button("Send ☕️", scale=1)
+
+    # Submit by Enter key
+    msg.submit(respond, [msg, chatbot], [chatbot, chatbot, msg])
+
+    # Submit by Send button
+    send_btn.click(respond, [msg, chatbot], [chatbot, chatbot, msg])
+
+# -----------------------------
+# 4️⃣ Launch
+# -----------------------------
 demo.launch(server_name="0.0.0.0", server_port=10000)
