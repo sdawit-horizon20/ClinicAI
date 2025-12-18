@@ -1,5 +1,5 @@
 import gradio as gr
-from utils.ai import respond
+from utils.ai import get_ai_response
 
 # Quick symptom buttons
 symptoms = ["Fever 🤒", "Cough 🤧", "Headache 🤕", "Stomach Pain 🤢", "Fatigue 🥱"]
