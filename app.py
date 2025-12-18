@@ -4,6 +4,8 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import gradio as gr
 from utils.ai import get_ai_response
+from utils.db import load_history, save_history
+from utils.translator import translate_text
 
 # Quick symptom buttons
 symptoms = ["Fever 🤒", "Cough 🤧", "Headache 🤕", "Stomach Pain 🤢", "Fatigue 🥱"]
