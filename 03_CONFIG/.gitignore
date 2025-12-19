@@ -1,4 +1,0 @@
-__pycache__/
-*.pyc
-.env
-03_DATABASE/01_chat_history.json
