@@ -1,20 +1,59 @@
 import gradio as gr
+import os
+
 from utils.ai import get_ai_response
-from utils.translator import translate_text
-from utils.db import save_chat
 
-def chat_interface(user_input, lang="en"):
-    ai_reply = get_ai_response(user_input)
-    translated_reply = translate_text(ai_reply, lang)
-    save_chat(user_input, translated_reply)
-    return translated_reply
 
-iface = gr.Interface(
-    fn=chat_interface,
-    inputs=[gr.Textbox(label="Your message"), gr.Dropdown(["en","fr","es"], label="Language")],
-    outputs="text",
-    title="ClinicAI - Super Advanced"
+SYSTEM_WELCOME = (
+    "Hello 👨‍⚕️🤍\n\n"
+    "I am ClinicAI, your healthcare assistant.\n\n"
+    "I can help you understand symptoms, give general health guidance, "
+    "and tell you when to seek medical care.\n\n"
+    "How can I help you today?"
 )
 
+
+def chat(user_input, history):
+    if not user_input:
+        return history, history
+
+    ai_reply = get_ai_response(user_input)
+
+    history.append({"role": "user", "content": user_input})
+    history.append({"role": "assistant", "content": ai_reply})
+
+    return history, history
+
+
+with gr.Blocks(title="ClinicAI 🏥") as demo:
+    gr.Markdown("## 🏥 ClinicAI — Your Healthcare Assistant")
+
+    chatbot = gr.Chatbot(
+        value=[{"role": "assistant", "content": SYSTEM_WELCOME}],
+        type="messages",
+        height=450,
+    )
+
+    msg = gr.Textbox(
+        placeholder="Describe your symptoms...",
+        label="Patient Input",
+    )
+
+    send = gr.Button("Send 💬")
+
+    send.click(
+        chat,
+        inputs=[msg, chatbot],
+        outputs=[chatbot, chatbot],
+    )
+
+    msg.submit(
+        chat,
+        inputs=[msg, chatbot],
+        outputs=[chatbot, chatbot],
+    )
+
+
 if __name__ == "__main__":
-    iface.launch(server_name="0.0.0.0", server_port=8080)
+    port = int(os.environ.get("PORT", 7860))
+    demo.launch(server_name="0.0.0.0", server_port=port)
