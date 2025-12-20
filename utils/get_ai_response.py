@@ -8,7 +8,7 @@ def get_ai_response(user_message):
     )
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",   # ✅ CORRECT MODEL NAME
+        model="gpt-4o-mini",  # ✅ EXACT
         messages=[
             {"role": "system", "content": "You are ClinicAI, a medical assistant."},
             {"role": "user", "content": user_message}
