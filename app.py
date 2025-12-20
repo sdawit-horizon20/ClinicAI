@@ -14,7 +14,10 @@ def chat(user_input, history):
 with gr.Blocks(title="ClinicAI 🏥") as demo:
     gr.Markdown("## 🏥 ClinicAI – Healthcare AI Assistant")
 
-    chatbot = gr.Chatbot(height=450)
+    chatbot = gr.Chatbot(
+        height=450,
+        type="tuples"   # ⭐ CRITICAL FIX
+    )
 
     with gr.Row():
         msg = gr.Textbox(
@@ -26,12 +29,8 @@ with gr.Blocks(title="ClinicAI 🏥") as demo:
 
     clear = gr.Button("Clear Chat")
 
-    # ENTER key
     msg.submit(chat, [msg, chatbot], [chatbot, msg])
-
-    # SEND button
     send.click(chat, [msg, chatbot], [chatbot, msg])
-
     clear.click(lambda: [], None, chatbot)
 
 demo.launch(server_name="0.0.0.0", server_port=10000)
