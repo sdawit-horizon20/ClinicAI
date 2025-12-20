@@ -1,32 +1,32 @@
 import gradio as gr
 from utils.ai import get_ai_response
 
+
 def respond(user_message, history):
     if history is None:
         history = []
 
-    # add user message
+    # user message
     history.append({
         "role": "user",
         "content": user_message
     })
 
-    # get AI reply
-    ai_reply = get_ai_response(user_message)
+    # AI response
+    reply = get_ai_response(user_message)
 
-    # add assistant message
     history.append({
         "role": "assistant",
-        "content": ai_reply
+        "content": reply
     })
 
-    return history, history
+    return history
 
 
 with gr.Blocks() as demo:
     gr.Markdown("## 🏥 ClinicAI — Your Health Assistant")
 
-    chatbot = gr.Chatbot(type="messages", height=500)
+    chatbot = gr.Chatbot(height=500)
 
     msg = gr.Textbox(
         placeholder="Describe your symptoms...",
@@ -39,7 +39,7 @@ with gr.Blocks() as demo:
     send.click(
         respond,
         inputs=[msg, chatbot],
-        outputs=[chatbot, chatbot]
+        outputs=chatbot
     )
 
     clear.click(
