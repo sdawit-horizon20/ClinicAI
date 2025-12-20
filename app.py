@@ -1,50 +1,38 @@
 import gradio as gr
-from utils.ai import get_ai_response
 
+def clinic_ai(chat_history):
+    try:
+        user_message = chat_history[-1]["content"]
 
-def respond(user_message, history):
-    if history is None:
-        history = []
+        reply = f"👩‍⚕️ ClinicAI response: You said '{user_message}'"
 
-    # user message
-    history.append({
-        "role": "user",
-        "content": user_message
-    })
+        chat_history.append({
+            "role": "assistant",
+            "content": reply
+        })
 
-    # AI response
-    reply = get_ai_response(user_message)
+        return chat_history
 
-    history.append({
-        "role": "assistant",
-        "content": reply
-    })
-
-    return history
-
+    except Exception as e:
+        return [{
+            "role": "assistant",
+            "content": f"⚠️ ClinicAI internal error: {str(e)}"
+        }]
 
 with gr.Blocks() as demo:
-    gr.Markdown("## 🏥 ClinicAI — Your Health Assistant")
+    gr.Markdown("## 🏥 ClinicAI")
 
-    chatbot = gr.Chatbot(height=500)
+    chatbot = gr.Chatbot(type="messages", height=450)
 
-    msg = gr.Textbox(
-        placeholder="Describe your symptoms...",
-        show_label=False
-    )
-
-    send = gr.Button("Send")
+    msg = gr.Textbox(placeholder="Describe your symptoms...")
     clear = gr.Button("Clear")
 
-    send.click(
-        respond,
-        inputs=[msg, chatbot],
+    msg.submit(
+        fn=clinic_ai,
+        inputs=chatbot,
         outputs=chatbot
     )
 
-    clear.click(
-        lambda: [],
-        outputs=chatbot
-    )
+    clear.click(lambda: [], None, chatbot)
 
 demo.launch(server_name="0.0.0.0", server_port=10000)
