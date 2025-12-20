@@ -1,41 +1,52 @@
+import os
 import gradio as gr
+from openai import OpenAI
 
 # =========================
-# ClinicAI core logic
+# ClinicAI backend function
 # =========================
 def clinic_ai(chat_history):
+    """
+    Handles user messages, calls OpenAI, and returns updated chat history.
+    """
     try:
-        # Safety: if empty history, do nothing
+        # Safety: do nothing if history is empty
         if not chat_history:
             return chat_history
 
-        # Get last user message
+        # Last user message
         user_message = chat_history[-1]["content"]
 
-        # ---- YOUR AI LOGIC GOES HERE ----
-        # (for now, simple demo response)
-        ai_reply = (
-            "👩‍⚕️ **ClinicAI**\n\n"
-            f"I received your message:\n> {user_message}\n\n"
-            "⚠️ This is not medical advice."
+        # OpenAI client with API key from environment
+        client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), timeout=30)
+
+        # Call OpenAI ChatCompletion
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # ✅ Correct model name
+            messages=[
+                {"role": "system", "content": "You are ClinicAI, a friendly medical assistant."},
+                {"role": "user", "content": user_message}
+            ]
         )
 
-        # Append assistant response
+        # Extract AI reply
+        reply = response.choices[0].message.content
+
+        # Append assistant response to chat history
         chat_history.append({
             "role": "assistant",
-            "content": ai_reply
+            "content": reply
         })
 
         return chat_history
 
     except Exception as e:
-        # Log real error to Render logs
-        print("❌ ClinicAI INTERNAL ERROR:", repr(e))
-
-        # Show safe message to user
+        # Log real error in Render logs
+        print("❌ ClinicAI ERROR:", repr(e))
+        # Return safe message to user
         return [{
             "role": "assistant",
-            "content": "⚠️ ClinicAI encountered an internal error. Please try again."
+            "content": "⚠️ AI service temporarily unavailable. Please try again."
         }]
 
 
@@ -45,41 +56,33 @@ def clinic_ai(chat_history):
 with gr.Blocks(title="ClinicAI") as demo:
     gr.Markdown(
         """
-        # 🏥 ClinicAI  
-        _AI-powered healthcare assistant_  
+        # 🏥 ClinicAI
+        _AI-powered medical assistant_  
         ⚠️ Not a substitute for professional medical advice.
         """
     )
 
-    chatbot = gr.Chatbot(
-        type="messages",
-        height=450
-    )
+    # Chatbot UI
+    chatbot = gr.Chatbot(type="messages", height=450)
 
+    # Textbox for user input
     msg = gr.Textbox(
         placeholder="Describe your symptoms...",
         show_label=False
     )
 
+    # Clear button
     clear = gr.Button("🧹 Clear Chat")
 
     # Submit message
-    msg.submit(
-        fn=clinic_ai,
-        inputs=chatbot,
-        outputs=chatbot
-    )
+    msg.submit(fn=clinic_ai, inputs=chatbot, outputs=chatbot)
 
     # Clear chat
-    clear.click(
-        lambda: [],
-        None,
-        chatbot
-    )
+    clear.click(lambda: [], None, chatbot)
 
 
 # =========================
-# Launch (Render compatible)
+# Launch server (Render-compatible)
 # =========================
 demo.launch(
     server_name="0.0.0.0",
