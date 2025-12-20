@@ -2,32 +2,28 @@ import gradio as gr
 from utils.ai import get_ai_response
 
 
-def chat(user_input, history):
-    if not user_input.strip():
+def chat(message, history):
+    if not message:
         return history, ""
 
-    response = get_ai_response(user_input)
-    history.append((user_input, response))
+    reply = get_ai_response(message)
+    history.append((message, reply))
     return history, ""
 
 
 with gr.Blocks(title="ClinicAI 🏥") as demo:
     gr.Markdown("## 🏥 ClinicAI – Healthcare AI Assistant")
 
-    chatbot = gr.Chatbot(
-        height=450,
-        type="tuples"   # ⭐ CRITICAL FIX
-    )
+    chatbot = gr.Chatbot(height=450)  # tuples by default in Gradio 6
 
     with gr.Row():
         msg = gr.Textbox(
-            placeholder="Type your medical question here...",
-            show_label=False,
+            placeholder="Ask a medical question...",
             scale=4
         )
         send = gr.Button("Send 🩺", scale=1)
 
-    clear = gr.Button("Clear Chat")
+    clear = gr.Button("Clear")
 
     msg.submit(chat, [msg, chatbot], [chatbot, msg])
     send.click(chat, [msg, chatbot], [chatbot, msg])
