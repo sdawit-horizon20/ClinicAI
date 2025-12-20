@@ -1,6 +1,8 @@
 import os
 from openai import OpenAI
 
+MODEL_NAME = "gpt-4o-mini"
+
 def get_ai_response(user_message):
     client = OpenAI(
         api_key=os.environ.get("OPENAI_API_KEY"),
@@ -8,7 +10,7 @@ def get_ai_response(user_message):
     )
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",  # ✅ EXACT
+        model=MODEL_NAME,
         messages=[
             {"role": "system", "content": "You are ClinicAI, a medical assistant."},
             {"role": "user", "content": user_message}
