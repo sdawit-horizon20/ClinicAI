@@ -1,32 +1,50 @@
 import gradio as gr
 from utils.ai import get_ai_response
 
+def respond(user_message, history):
+    if history is None:
+        history = []
 
-def chat(message, history):
-    if not message:
-        return history, ""
+    # add user message
+    history.append({
+        "role": "user",
+        "content": user_message
+    })
 
-    reply = get_ai_response(message)
-    history.append((message, reply))
-    return history, ""
+    # get AI reply
+    ai_reply = get_ai_response(user_message)
+
+    # add assistant message
+    history.append({
+        "role": "assistant",
+        "content": ai_reply
+    })
+
+    return history, history
 
 
-with gr.Blocks(title="ClinicAI 🏥") as demo:
-    gr.Markdown("## 🏥 ClinicAI – Healthcare AI Assistant")
+with gr.Blocks() as demo:
+    gr.Markdown("## 🏥 ClinicAI — Your Health Assistant")
 
-    chatbot = gr.Chatbot(height=450)  # tuples by default in Gradio 6
+    chatbot = gr.Chatbot(type="messages", height=500)
 
-    with gr.Row():
-        msg = gr.Textbox(
-            placeholder="Ask a medical question...",
-            scale=4
-        )
-        send = gr.Button("Send 🩺", scale=1)
+    msg = gr.Textbox(
+        placeholder="Describe your symptoms...",
+        show_label=False
+    )
 
+    send = gr.Button("Send")
     clear = gr.Button("Clear")
 
-    msg.submit(chat, [msg, chatbot], [chatbot, msg])
-    send.click(chat, [msg, chatbot], [chatbot, msg])
-    clear.click(lambda: [], None, chatbot)
+    send.click(
+        respond,
+        inputs=[msg, chatbot],
+        outputs=[chatbot, chatbot]
+    )
+
+    clear.click(
+        lambda: [],
+        outputs=chatbot
+    )
 
 demo.launch(server_name="0.0.0.0", server_port=10000)
