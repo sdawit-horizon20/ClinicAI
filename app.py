@@ -1,18 +1,25 @@
-from openai import OpenAI
-import os
+import gradio as gr
+from utils.ai import get_ai_response
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+def chat(user_message, history):
+    reply = get_ai_response(user_message)
+    history.append((user_message, reply))
+    return history, ""
 
-def get_ai_response(user_message: str) -> str:
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are ClinicAI, a helpful medical assistant."},
-                {"role": "user", "content": user_message}
-            ],
-            timeout=30
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"⚠️ ClinicAI error: {str(e)}"
+def clear_chat():
+    return []
+
+with gr.Blocks(title="ClinicAI") as app:
+    gr.Markdown("## 🏥 ClinicAI – Medical Assistant")
+
+    chatbot = gr.Chatbot(height=450)
+    msg = gr.Textbox(placeholder="Ask a medical question...")
+    
+    with gr.Row():
+        send = gr.Button("Send")
+        clear = gr.Button("Clear Chat")
+
+    send.click(chat, inputs=[msg, chatbot], outputs=[chatbot, msg])
+    clear.click(clear_chat, outputs=chatbot)
+
+app.launch(server_name="0.0.0.0", server_port=7860)
