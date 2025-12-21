@@ -1,25 +1,36 @@
+import os
+from dotenv import load_dotenv
 import gradio as gr
-from utils.ai import get_ai_response
+import openai
 
-def chat(user_message, history):
-    reply = get_ai_response(user_message)
-    history.append((user_message, reply))
-    return history, ""
+# Load environment variables
+load_dotenv()
 
-def clear_chat():
-    return []
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY not set in environment variables!")
 
-with gr.Blocks(title="ClinicAI") as app:
-    gr.Markdown("## 🏥 ClinicAI – Medical Assistant")
+openai.api_key = OPENAI_API_KEY
 
-    chatbot = gr.Chatbot(height=450)
-    msg = gr.Textbox(placeholder="Ask a medical question...")
-    
-    with gr.Row():
-        send = gr.Button("Send")
-        clear = gr.Button("Clear Chat")
+# Main AI function
+def ask_ai(prompt):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"⚠️ Error: {str(e)}"
 
-    send.click(chat, inputs=[msg, chatbot], outputs=[chatbot, msg])
-    clear.click(clear_chat, outputs=chatbot)
+# Gradio interface
+iface = gr.Interface(
+    fn=ask_ai,
+    inputs="text",
+    outputs="text",
+    title="ClinicAI",
+    description="Ask any medical-related questions!"
+)
 
-app.launch(server_name="0.0.0.0", server_port=7860)
+# Launch
+iface.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
