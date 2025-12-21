@@ -1,72 +1,102 @@
 import os
 import gradio as gr
+from openai import OpenAI
 
-USE_OPENAI = True  # change to False to disable OpenAI completely
+# =========================
+# OpenAI Client
+# =========================
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY")
+)
 
-def clinic_ai(chat_history):
+SYSTEM_PROMPT = (
+    "You are ClinicAI, a helpful and safe healthcare assistant. "
+    "You provide general medical information only and always advise "
+    "users to consult a licensed healthcare professional."
+)
+
+# =========================
+# AI Response Function
+# =========================
+def get_ai_response(user_message, history):
+    if not user_message:
+        return history
+
     try:
-        if not chat_history:
-            return chat_history
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-        user_message = chat_history[-1]["content"]
+        # Convert chat history to OpenAI format
+        for user, assistant in history:
+            messages.append({"role": "user", "content": user})
+            messages.append({"role": "assistant", "content": assistant})
 
-        reply = None
+        messages.append({"role": "user", "content": user_message})
 
-        if USE_OPENAI:
-            try:
-                from openai import OpenAI
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.4,
+            timeout=30
+        )
 
-                client = OpenAI(
-                    api_key=os.environ.get("OPENAI_API_KEY"),
-                    timeout=20
-                )
-
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are ClinicAI, a medical assistant."},
-                        {"role": "user", "content": user_message}
-                    ]
-                )
-
-                reply = response.choices[0].message.content
-
-            except Exception as e:
-                print("⚠️ OpenAI unavailable:", repr(e))
-
-        # 🔁 FALLBACK RESPONSE (ALWAYS WORKS)
-        if not reply:
-            reply = (
-                "👩‍⚕️ **ClinicAI (Offline Mode)**\n\n"
-                "I’m currently unable to reach the AI service, but I’m still here.\n\n"
-                f"You said:\n> {user_message}\n\n"
-                "⚠️ This is not medical advice."
-            )
-
-        chat_history.append({
-            "role": "assistant",
-            "content": reply
-        })
-
-        return chat_history
+        reply = response.choices[0].message.content
+        history.append((user_message, reply))
+        return history
 
     except Exception as e:
-        print("❌ UNEXPECTED ERROR:", repr(e))
-        return [{
-            "role": "assistant",
-            "content": "⚠️ System error. Please refresh the page."
-        }]
+        history.append(
+            (user_message, "⚠️ ClinicAI error: Unable to connect to AI service.")
+        )
+        return history
 
+
+# =========================
+# Clear Chat Function  ✅ FIX
+# =========================
+def clear_chat():
+    return [], ""
+
+
+# =========================
+# Gradio UI
+# =========================
 with gr.Blocks(title="ClinicAI") as demo:
-    gr.Markdown(
-        "# 🏥 ClinicAI\n"
-        "_AI-powered medical assistant_  \n"
-        "⚠️ Not a substitute for professional medical advice."
+    gr.Markdown("## 🏥 ClinicAI – Healthcare Assistant")
+
+    chatbot = gr.Chatbot(height=450)
+    msg = gr.Textbox(
+        placeholder="Ask a health-related question...",
+        label="Your Message"
     )
 
-    chatbot = gr.Chatbot(type="messages", height=450)
-    msg = gr.Textbox(placeholder="Describe your symptoms...")
+    with gr.Row():
+        send_btn = gr.Button("Send")
+        clear_btn = gr.Button("🧹 Clear Chat")
 
-    msg.submit(fn=clinic_ai, inputs=chatbot, outputs=chatbot)
+    send_btn.click(
+        fn=get_ai_response,
+        inputs=[msg, chatbot],
+        outputs=chatbot
+    )
 
-demo.launch(server_name="0.0.0.0", server_port=10000)
+    msg.submit(
+        fn=get_ai_response,
+        inputs=[msg, chatbot],
+        outputs=chatbot
+    )
+
+    clear_btn.click(
+        fn=clear_chat,
+        inputs=None,
+        outputs=[chatbot, msg]
+    )
+
+
+# =========================
+# Launch (Render-safe)
+# =========================
+demo.launch(
+    server_name="0.0.0.0",
+    server_port=int(os.environ.get("PORT", 10000)),
+    show_error=True
+    )
